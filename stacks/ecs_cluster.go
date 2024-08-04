@@ -13,9 +13,9 @@ type EcsClusterStack struct {
 	Cluster awsecs.Cluster
 }
 
-func NewEcsClusterStack(scope constructs.Construct, id string, vpc awsec2.Vpc, env *awscdk.Environment) EcsClusterStack {
+func NewEcsClusterStack(scope constructs.Construct, id string, vpc awsec2.Vpc) EcsClusterStack {
 	stack := awscdk.NewStack(scope, &id, &awscdk.StackProps{
-		Env: env,
+		Env: (*awscdk.Environment)(vpc.Env()),
 	})
 
 	cluster := awsecs.NewCluster(stack, jsii.String("EcsCluster"), &awsecs.ClusterProps{

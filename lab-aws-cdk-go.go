@@ -11,12 +11,22 @@ func main() {
 
 	app := awscdk.NewApp(nil)
 
-	// Cria a stack da VPC
 	vpcStack := stacks.NewVpcStack(app, "VPC", env())
 
-	// Cria a stack do Cluster ECS, passando a VPC criada
-	ecsClusterStack := stacks.NewEcsClusterStack(app, "ECS-Cluster", vpcStack.Vpc, env())
+	ecsClusterStack := stacks.NewEcsClusterStack(app, "ECS-Cluster", vpcStack.Vpc)
 	ecsClusterStack.AddDependency(vpcStack.Stack, nil)
+
+	// Cria a stack do Service01, passando o cluster ECS criado
+	service01Props := &stacks.Service01StackProps{
+		StackProps: awscdk.StackProps{
+			Env: env(),
+		},
+		Cluster: ecsClusterStack.Cluster,
+		// ProductEventsTopic: productEventsTopic,
+	}
+
+	service01Stack := stacks.NewService01Stack(app, "Service-01", service01Props)
+	service01Stack.AddDependency(ecsClusterStack.Stack, nil)
 
 	app.Synth(nil)
 }

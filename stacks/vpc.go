@@ -18,7 +18,7 @@ func NewVpcStack(scope constructs.Construct, id string, env *awscdk.Environment)
 	})
 
 	vpc := awsec2.NewVpc(stack, jsii.String("Vpc"), &awsec2.VpcProps{
-		MaxAzs:      jsii.Number(1),
+		MaxAzs:      jsii.Number(2),
 		NatGateways: jsii.Number(0),
 	})
 
