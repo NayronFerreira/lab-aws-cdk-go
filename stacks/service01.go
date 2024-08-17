@@ -20,20 +20,29 @@ type Service01StackProps struct {
 func NewService01Stack(scope constructs.Construct, id string, props *Service01StackProps) awscdk.Stack {
 	stack := awscdk.NewStack(scope, &id, &props.StackProps)
 
-	// envVariables := map[string]*string{
-	// 	"SPRING_DATASOURCE_URL":            jsii.String("jdbc:mysql://" + awscdk.Fn_ImportValue(jsii.String("rds-endpoint")) + ":3306/aws_project01?createDatabaseIfNotExist=true"),
-	// 	"SPRING_DATASOURCE_USERNAME":       awscdk.Fn_ImportValue(jsii.String("rds-user")),
-	// 	"SPRING_DATASOURCE_PASSWORD":       awscdk.Fn_ImportValue(jsii.String("rds-pass")),
-	// 	"AWS_REGION":                       jsii.String("us-east-1"),
-	// 	"AWS_SNS_TOPIC_PRODUCT_EVENTS_ARN": props.ProductEventsTopic.TopicArn(),
-	// }
+	rdsEndpoint := awscdk.Fn_ImportValue(jsii.String("rds-endpoint"))
+	rdsUser := awscdk.Fn_ImportValue(jsii.String("rds-user"))
+	rdsPass := awscdk.Fn_ImportValue(jsii.String("rds-pass"))
+	dbTable := "products"
 
-	logGroup := awslogs.NewLogGroup(stack, jsii.String("Service-01-LogGroup"), &awslogs.LogGroupProps{
-		LogGroupName:  jsii.String("Service-01"),
+	envVariables := map[string]*string{
+		"DB_DRIVER":       jsii.String("mysql"),
+		"DB_HOST":         jsii.String(*rdsEndpoint),
+		"DB_USER":         rdsUser,
+		"DB_PASS":         rdsPass,
+		"DB_NAME":         jsii.String("lab_aws"),
+		"DB_TABLE":        &dbTable,
+		"AWS_REGION":      jsii.String("sa-east-1"),
+		"WEB_SERVER_PORT": jsii.String("8000"),
+		// "AWS_SNS_TOPIC_PRODUCT_EVENTS_ARN": props.ProductEventsTopic
+	}
+
+	logGroup := awslogs.NewLogGroup(stack, jsii.String("Microservice-products-LG"), &awslogs.LogGroupProps{
+		LogGroupName:  jsii.String("Microservice-products"),
 		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
 	})
 
-	containerImage := awsecs.ContainerImage_FromRegistry(jsii.String("nayronferreiradev/microservice_products:v1.0.1"), nil)
+	containerImage := awsecs.ContainerImage_FromRegistry(jsii.String("nayronferreiradev/microservice_products:v1.0.10"), nil)
 
 	taskDefinition := awsecs.NewFargateTaskDefinition(stack, jsii.String("Task-Definition"), &awsecs.FargateTaskDefinitionProps{
 		Cpu:            jsii.Number(256),
@@ -44,20 +53,20 @@ func NewService01Stack(scope constructs.Construct, id string, props *Service01St
 		Image: containerImage,
 		Logging: awsecs.LogDriver_AwsLogs(&awsecs.AwsLogDriverProps{
 			LogGroup:     logGroup,
-			StreamPrefix: jsii.String("Service-01"),
+			StreamPrefix: jsii.String("Microservice-products"),
 		}),
-		// Environment: props.Cluster.Vpc(),
+		Environment: &envVariables,
 	})
 
 	container.AddPortMappings(&awsecs.PortMapping{
 		ContainerPort: jsii.Number(8000),
 	})
 
-	service := awsecs.NewFargateService(stack, jsii.String("Service-01"), &awsecs.FargateServiceProps{
+	service := awsecs.NewFargateService(stack, jsii.String("Microservice-products"), &awsecs.FargateServiceProps{
 		Cluster:        props.Cluster,
 		TaskDefinition: taskDefinition,
 		DesiredCount:   jsii.Number(2),
-		AssignPublicIp: jsii.Bool(true),
+		AssignPublicIp: jsii.Bool(false),
 	})
 
 	alb := awselasticloadbalancingv2.NewApplicationLoadBalancer(stack, jsii.String("ALB-01"), &awselasticloadbalancingv2.ApplicationLoadBalancerProps{

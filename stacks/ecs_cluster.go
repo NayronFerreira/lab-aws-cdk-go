@@ -18,7 +18,7 @@ func NewEcsClusterStack(scope constructs.Construct, id string, vpc awsec2.Vpc) E
 		Env: (*awscdk.Environment)(vpc.Env()),
 	})
 
-	cluster := awsecs.NewCluster(stack, jsii.String("EcsCluster"), &awsecs.ClusterProps{
+	cluster := awsecs.NewCluster(stack, jsii.String("ECS-Lab"), &awsecs.ClusterProps{
 		Vpc: vpc,
 	})
 
